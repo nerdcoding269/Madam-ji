@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Will you be my Valentine?</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <style>
+    :root {
+      --bg1: #ffd6e7;
+      --bg2: #ffeef6;
+      --card: #ffffffcc;
+      --yes: #ff3b7a;
+      --yesHover: #ff1f68;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100svh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at top, var(--bg2), var(--bg1));
+      font-family: system-ui, sans-serif;
+      overflow: hidden;
+      padding: 16px;
+    }
+
+    .heart-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .floating-heart {
+      position: absolute;
+      color: #ffb1cf;
+      opacity: 0.6;
+      animation: floatUp 6s linear infinite;
+    }
+
+    @keyframes floatUp {
+      0% { transform: translateY(110vh) scale(0); opacity: 0; }
+      20% { opacity: 0.6; }
+      100% { transform: translateY(-10vh) scale(1.5); opacity: 0; }
+    }
+
+    #confettiCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    .card {
+      width: min(720px, 92vw);
+      padding: 26px 22px;
+      background: var(--card);
+      backdrop-filter: blur(10px);
+      border-radius: 22px;
+      text-align: center;
+      box-shadow: 0 18px 60px rgba(0,0,0,.15);
+      position: relative;
+      z-index: 10;
+    }
+
+    .art {
+      width: min(260px, 80vw);
+      margin: 0 auto 10px;
+      display: block;
+      filter: drop-shadow(0 10px 14px rgba(0,0,0,.12));
+    }
+
+    h1 {
+      font-size: clamp(26px, 4vw, 44px);
+      margin: 12px 0 18px;
+    }
+
+    .button-zone {
+      position: relative;
+      width: min(520px, 92%);
+      height: 160px;
+      margin: 0 auto;
+      touch-action: none;
+    }
+
+    button {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      padding: 16px 28px;
+      font-size: 18px;
+      font-weight: 800;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 10px 24px rgba(0,0,0,.14);
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform .15s cubic-bezier(0.175, 0.885, 0.32, 1.275), background .12s ease, left 0.3s ease, top 0.3s ease;
+    }
+
+    #yesBtn {
+      left: 15%;
+      background: var(--yes);
+      color: #fff;
+    }
+    #yesBtn:hover { background: var(--yesHover); transform: translateY(-50%) scale(1.05); }
+
+    #noBtn {
+      left: 60%;
+      background: #e5e7eb;
+      color: #111827;
+      white-space: nowrap;
+    }
+
+    .hint {
+      margin-top: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #ff3b7a;
+      opacity: .8;
+    }
+
+    .result {
+      display: none;
+      margin-top: 18px;
+      animation: pop .4s ease;
+    }
+
+    .result h2 {
+      font-size: clamp(34px, 5vw, 52px);
+      margin: 10px 0;
+      color: #ff1f68;
+    }
+
+    @keyframes pop {
+      from { transform: scale(.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    
+    #blush {
+      visibility: hidden;
+      fill: #ff99b6;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="heart-bg" id="heartBg"></div>
+  <canvas id="confettiCanvas"></canvas>
+
+  <audio id="bgMusic" loop>
+    <source src="https://www.bensound.com/bensound-music/bensound-love.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
+  <main class="card">
+    <svg class="art" viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg" id="catSvg">
+      <defs>
+        <linearGradient id="fur" x1="0" x2="1">
+          <stop offset="0" stop-color="#f7c7a1"/>
+          <stop offset="1" stop-color="#f2a97b"/>
+        </linearGradient>
+        <linearGradient id="heart" x1="0" x2="1">
+          <stop offset="0" stop-color="#ff4d7d"/>
+          <stop offset="1" stop-color="#ff1f68"/>
+        </linearGradient>
+      </defs>
+
+      <path d="M250 50 C250 33 270 25 282 38 C294 25 314 33 314 50 C314 78 282 92 282 106 C282 92 250 78 250 50Z" fill="url(#heart)"/>
+      <path d="M90 120 C90 70 140 40 190 60 C240 40 290 70 290 120 C290 180 240 210 190 210 C140 210 90 180 90 120Z" fill="url(#fur)"/>
+      <path d="M110 92 L95 55 L140 78 Z" fill="#f2a97b"/>
+      <path d="M270 92 L285 55 L240 78 Z" fill="#f2a97b"/>
+      
+      <circle cx="160" cy="130" r="10" fill="white"/>
+      <circle cx="220" cy="130" r="10" fill="white"/>
+
+      <circle class="pupil" cx="160" cy="130" r="5" fill="#333"/>
+      <circle class="pupil" cx="220" cy="130" r="5" fill="#333"/>
+      
+      <g id="blush">
+        <circle cx="140" cy="150" r="12" opacity="0.4"/>
+        <circle cx="240" cy="150" r="12" opacity="0.4"/>
+      </g>
+
+      <path d="M190 144 C186 144 182 148 182 152 C182 160 190 164 190 170 C190 164 198 160 198 152 C198 148 194 144 190 144Z" fill="#ff7aa2"/>
+    </svg>
+
+    <h1>Rani jii, will you be my valentine?</h1>
+
+    <section class="button-zone" id="zone">
+      <button id="yesBtn">Yes</button>
+      <button id="noBtn">No</button>
+    </section>
+
+    <div class="hint" id="hint">Think carefully! 🌸</div>
+
+    <section class="result" id="result">
+      <h2>YAY! ❤️</h2>
+      <img class="fireworks" src="https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif" alt="Fireworks" width="300"/>
+    </section>
+  </main>
+
+  <script>
+    const zone = document.getElementById("zone");
+    const yesBtn = document.getElementById("yesBtn");
+    const noBtn = document.getElementById("noBtn");
+    const result = document.getElementById("result");
+    const hint = document.getElementById("hint");
+    const blush = document.getElementById("blush");
+    const heartBg = document.getElementById("heartBg");
+    const pupils = document.querySelectorAll(".pupil");
+    const bgMusic = document.getElementById("bgMusic");
+
+    const phrases = ["No", "Are you sure?", "Rani jii please?", "Puchlo ek baar!", "Think again!", "You're breaking my heart!", "I'll be sad...", "Okay, I'll stop asking...", "Just kidding, YES PLEASE!"];
+    let phraseIndex = 0;
+
+    /* ---------- EYE TRACKING ---------- */
+    window.addEventListener("mousemove", (e) => {
+      pupils.forEach((pupil) => {
+        const rect = pupil.getBoundingClientRect();
+        const eyeX = rect.left + rect.width / 2;
+        const eyeY = rect.top + rect.height / 2;
+        const angle = Math.atan2(e.clientY - eyeY, e.clientX - eyeX);
+        const distance = 4;
+        const moveX = Math.cos(angle) * distance;
+        const moveY = Math.sin(angle) * distance;
+        pupil.style.transform = `translate(${moveX}px, ${moveY}px)`;
+      });
+    });
+
+    /* ---------- BACKGROUND HEARTS ---------- */
+    function createHeart() {
+      const heart = document.createElement("div");
+      heart.classList.add("floating-heart");
+      heart.innerHTML = "❤️";
+      heart.style.left = Math.random() * 100 + "vw";
+      heart.style.fontSize = (Math.random() * 20 + 10) + "px";
+      heart.style.animationDuration = (Math.random() * 3 + 3) + "s";
+      heartBg.appendChild(heart);
+      setTimeout(() => heart.remove(), 6000);
+    }
+    setInterval(createHeart, 400);
+
+    /* ---------- CONFETTI ---------- */
+    const confettiCanvas = document.getElementById("confettiCanvas");
+    function resizeConfettiCanvas() {
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      confettiCanvas.width = Math.floor(window.innerWidth * dpr);
+      confettiCanvas.height = Math.floor(window.innerHeight * dpr);
+    }
+    resizeConfettiCanvas();
+    const confettiInstance = confetti.create(confettiCanvas, { resize: false, useWorker: true });
+
+    function fullScreenConfetti() {
+      const end = Date.now() + 2000;
+      (function frame() {
+        confettiInstance({ particleCount: 10, spread: 100, origin: { x: Math.random(), y: Math.random() * 0.3 } });
+        if (Date.now() < end) requestAnimationFrame(frame);
+      })();
+    }
+
+    /* ---------- INTERACTION ---------- */
+    let yesScale = 1;
+    function moveNo(px, py) {
+      const z = zone.getBoundingClientRect();
+      const b = noBtn.getBoundingClientRect();
+      let dx = (b.left + b.width / 2) - px;
+      let dy = (b.top + b.height / 2) - py;
+      let mag = Math.hypot(dx, dy) || 1;
+      let newLeft = (b.left - z.left) + (dx / mag) * 120;
+      let newTop  = (b.top - z.top) + (dy / mag) * 120;
+      noBtn.style.left = Math.max(0, Math.min(newLeft, z.width - b.width)) + "px";
+      noBtn.style.top = Math.max(0, Math.min(newTop, z.height - b.height)) + "px";
+      phraseIndex = (phraseIndex + 1) % phrases.length;
+      noBtn.innerText = phrases[phraseIndex];
+      yesScale = Math.min(3, yesScale + 0.15);
+      yesBtn.style.transform = `translateY(-50%) scale(${yesScale})`;
+    }
+
+    zone.addEventListener("pointermove", e => {
+      const b = noBtn.getBoundingClientRect();
+      const d = Math.hypot((b.left + b.width / 2) - e.clientX, (b.top + b.height / 2) - e.clientY);
+      if (d < 120) moveNo(e.clientX, e.clientY);
+    });
+
+    yesBtn.addEventListener("click", () => {
+      zone.style.display = "none";
+      hint.style.display = "none";
+      result.style.display = "block";
+      blush.style.visibility = "visible";
+      
+      // PLAY MUSIC
+      bgMusic.play().catch(error => console.log("Audio play failed:", error));
+      
+      fullScreenConfetti();
+    });
+  </script>
+</body>
+</html>
